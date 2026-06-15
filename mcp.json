@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "cmc-mcp": {
+      "url": "https://mcp.coinmarketcap.com/mcp",
+      "headers": {
+        "X-CMC-MCP-API-KEY": "your-api-key-here"
+      }
+    }
+  },
+  "skill": {
+    "name": "Fear & Greed Regime Switcher",
+    "version": "2.0",
+    "track": "Track 2 -- Strategy Skills",
+    "entry": "skill.py",
+    "modes": ["backtest", "backtest2", "live", "spec"],
+    "cmc_endpoints_used": [
+      "/v3/fear-and-greed/latest",
+      "/v3/fear-and-greed/historical"
+    ],
+    "output": "outputs/spec.json",
+    "agent_hub_compatible": true,
+    "description": "Consumes CMC Fear & Greed data via the Agent Hub MCP layer to gate a 4H momentum strategy. Outputs a machine-readable spec.json consumable by any Track 1 autonomous trading agent."
+  }
+}
