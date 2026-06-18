@@ -94,7 +94,7 @@ fg-regime-switcher/
 
 | Source | Used for | Auth |
 |---|---|---|
-| CoinMarketCap API | Live F&G, historical F&G from Jul 2023 | API key (Startup plan) |
+| CoinMarketCap API | Live F&G, historical F&G from Jul 2023 | API key |
 | Alternative.me | F&G history Jan 2020 to Jun 2023 | None |
 | Binance Public Klines | 1H OHLCV for all tokens | None |
 
