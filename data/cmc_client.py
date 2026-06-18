@@ -56,27 +56,35 @@ def get_fear_greed_history(
     end_date: str,
 ) -> pd.DataFrame:
     url = f"{CMC_BASE_URL}/v3/fear-and-greed/historical"
+    PAGE_SIZE = 500
+    all_records = []
+    start_offset = 1
 
-    params = {
-        "limit": 500,
-    }
+    while True:
+        params = {
+            "limit": PAGE_SIZE,
+            "start": start_offset,
+        }
+        response = requests.get(url, headers=_get_headers(), params=params, timeout=10)
+        response.raise_for_status()
+        records = response.json().get("data", [])
+        if not records:
+            break
+        all_records.extend(records)
+        if len(records) < PAGE_SIZE:
+            break
+        start_offset += PAGE_SIZE
 
-    response = requests.get(url, headers=_get_headers(), params=params, timeout=10)
-    response.raise_for_status()
+    if not all_records:
+        raise ValueError("No CMC F&G data returned")
 
-    records = response.json().get("data", [])
-
-    if not records:
-        raise ValueError(f"No CMC F&G data returned")
-
-    df = pd.DataFrame(records)
+    df = pd.DataFrame(all_records)
     df["date"] = pd.to_datetime(df["timestamp"].astype(int), unit="s", utc=True).dt.date
     df["value"] = df["value"].astype(int)
     df = df.rename(columns={"value_classification": "classification"})
     df = df[["date", "value", "classification"]].copy()
     df = df.sort_values("date").reset_index(drop=True)
 
-    # Filter to requested date range
     start = datetime.strptime(start_date, "%Y-%m-%d").date()
     end = datetime.strptime(end_date, "%Y-%m-%d").date()
     df = df[(df["date"] >= start) & (df["date"] <= end)]

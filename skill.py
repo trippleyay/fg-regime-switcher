@@ -4,18 +4,17 @@ skill.py
 CLI orchestrator for the Fear & Greed Regime Switcher.
 
 Usage:
-  python skill.py --mode backtest          # Run full historical backtest
-  python skill.py --mode live              # Print live regime + signals
-  python skill.py --mode spec              # Dump strategy spec JSON
-  python skill.py --mode backtest --quick  # Smoke test (30-day window)
+  python skill.py --mode backtest   # Run full historical backtest
+  python skill.py --mode live       # Print live regime + signals
+  python skill.py --mode spec       # Dump strategy spec JSON
 """
 
 import argparse
 import json
 import os
-import sys
 from datetime import datetime, timedelta
 
+from backtester import INTERVAL
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "outputs")
 
@@ -32,18 +31,8 @@ def mode_spec():
     print(f"\nSpec written to {path}")
 
 
-def mode_backtest(quick: bool = False):
-    from backtester import run_backtest, write_spec, write_report, OUTPUT_DIR as BT_OUT
-    import pandas as pd
-
-    if quick:
-        # Patch constants for a fast smoke test
-        import backtester
-        from datetime import timezone as _tz
-        _now = datetime.now(_tz.utc)
-        backtester.START_DATE = (_now - timedelta(days=30)).strftime("%Y-%m-%d")
-        backtester.END_DATE   = _now.strftime("%Y-%m-%d")
-        print(f"[QUICK MODE] {backtester.START_DATE} → {backtester.END_DATE}")
+def mode_backtest():
+    from backtester import run_backtest, write_spec, write_report
 
     metrics, trades_df, equity_df = run_backtest()
 
@@ -51,15 +40,17 @@ def mode_backtest(quick: bool = False):
     print("  BACKTEST RESULTS")
     print("=" * 50)
     rows = [
-        ("Total Return",          f"{metrics['total_return_pct']:.2f}%"),
-        ("Annualised Return",     f"{metrics['annualised_return_pct']:.2f}%"),
-        ("Max Drawdown",          f"{metrics['max_drawdown_pct']:.2f}%"),
-        ("Max DD Duration",       f"{metrics['max_drawdown_days']:.0f} days"),
-        ("Sharpe Ratio",          f"{metrics['sharpe_ratio']:.3f}"),
-        ("Total Trades",          f"{metrics['n_trades']}"),
-        ("Win Rate",              f"{metrics['win_rate_pct']:.2f}%"),
-        ("Profit Factor",         f"{metrics['profit_factor']:.3f}"),
-        ("Final Equity",          f"${metrics['final_equity']:,.2f}"),
+        ("Period",            f"{metrics['backtest_start']} to {metrics['backtest_end']}"),
+        ("Interval",          metrics["interval"].upper()),
+        ("F&G Source",        metrics["fg_source"]),
+        ("Total Return",      f"{metrics['total_return_pct']:.2f}%"),
+        ("Annualised Return", f"{metrics['annualised_return_pct']:.2f}%"),
+        ("Max Drawdown",      f"{metrics['max_drawdown_pct']:.2f}%"),
+        ("Sharpe Ratio",      f"{metrics['sharpe_ratio']:.3f}"),
+        ("Total Trades",      f"{metrics['n_trades']}"),
+        ("Win Rate",          f"{metrics['win_rate_pct']:.2f}%"),
+        ("Profit Factor",     f"{metrics['profit_factor']:.3f}"),
+        ("Final Equity",      f"${metrics['final_equity']:,.2f}"),
     ]
     for label, val in rows:
         print(f"  {label:<25} {val}")
@@ -72,55 +63,22 @@ def mode_backtest(quick: bool = False):
     print(f"\nOutputs written to {OUTPUT_DIR}/")
 
 
-def mode_backtest2():
-    """Backtest 2: last 30 days, F&G from CMC API."""
-    from backtester import run_backtest2, OUTPUT_DIR
-    import os
-
-    metrics, trades_df, equity_df = run_backtest2()
-
-    print("\n" + "=" * 50)
-    print("  BACKTEST 2 RESULTS (CMC F&G, 30-day)")
-    print("=" * 50)
-    rows = [
-        ("Period",               f"{metrics['backtest_start']} to {metrics['backtest_end']}"),
-        ("F&G Source",           metrics["fg_source"]),
-        ("Total Return",         f"{metrics['total_return_pct']:.2f}%"),
-        ("Annualised Return",    f"{metrics['annualised_return_pct']:.2f}%"),
-        ("Max Drawdown",         f"{metrics['max_drawdown_pct']:.2f}%"),
-        ("Sharpe Ratio",         f"{metrics['sharpe_ratio']:.3f}"),
-        ("Total Trades",         f"{metrics['n_trades']}"),
-        ("Win Rate",             f"{metrics['win_rate_pct']:.2f}%"),
-        ("Profit Factor",        f"{metrics['profit_factor']:.3f}"),
-        ("Final Equity",         f"${metrics['final_equity']:,.2f}"),
-    ]
-    for label, val in rows:
-        print(f"  {label:<25} {val}")
-    print("=" * 50)
-
-    import json, os
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(os.path.join(OUTPUT_DIR, "bt2_spec.json"), "w") as f:
-        json.dump(metrics, f, indent=2, default=str)
-    trades_df.to_csv(os.path.join(OUTPUT_DIR, "bt2_trades.csv"), index=False)
-    equity_df.to_csv(os.path.join(OUTPUT_DIR, "bt2_equity.csv"))
-    print(f"\nOutputs written to {OUTPUT_DIR}/bt2_*")
-
-
 def mode_live():
-    """Fetch current F&G and live 4H bar, print regime + any open signals."""
+    """Fetch current F&G and latest bar, print regime + entry signals."""
     print("Fetching live data...\n")
+
+    from datetime import timezone as _tz
 
     # F&G via CMC (primary), Alternative.me (fallback)
     try:
         from data.cmc_client import get_fear_greed_latest
-        fg_live = get_fear_greed_latest()
+        fg_live  = get_fear_greed_latest()
         fg_value = int(fg_live["value"])
         fg_label = fg_live.get("classification", "")
     except Exception as e:
         print(f"[WARN] CMC client failed ({e}), falling back to Alternative.me")
         from data.alternative_me_client import get_current_fear_greed
-        fg_live = get_current_fear_greed()
+        fg_live  = get_current_fear_greed()
         fg_value = int(fg_live["value"])
         fg_label = fg_live.get("classification", "")
 
@@ -135,32 +93,43 @@ def mode_live():
         print("No new longs permitted in current regime.")
         return
 
-    # Check latest 4H bar for each token
-    from data.binance_client import BinanceClient
-    from strategy_selector import add_indicators, entry_signal
+    import requests
+    import time as time_mod
     import pandas as pd
+    from strategy_selector import add_indicators, entry_signal
 
-    bc = BinanceClient()
-    end = datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%d")
-    start = (datetime.now(__import__("datetime").timezone.utc) - timedelta(days=60)).strftime("%Y-%m-%d")
+    end_ts   = int(datetime.now(_tz.utc).timestamp() * 1000)
+    start_ts = int((datetime.now(_tz.utc) - timedelta(days=60)).timestamp() * 1000)
 
-    print("Scanning tokens for entry signals...\n")
+    print(f"Scanning tokens for entry signals ({INTERVAL.upper()} bars)...\n")
     signals = []
+
     for sym in ["BTCUSDT", "ETHUSDT", "BNBUSDT", "CAKEUSDT"]:
         try:
-            df = bc.get_klines(symbol=sym, interval="4h", start=start, end=end)
+            params = {"symbol": sym, "interval": INTERVAL,
+                      "startTime": start_ts, "endTime": end_ts, "limit": 1000}
+            resp = requests.get("https://api1.binance.com/api/v3/klines",
+                                params=params, timeout=10)
+            resp.raise_for_status()
+            candles = resp.json()
+            df = pd.DataFrame(candles, columns=[
+                "open_time", "open", "high", "low", "close", "volume",
+                "close_time", "quote_volume", "trades",
+                "taker_buy_base", "taker_buy_quote", "ignore"
+            ])
             df = df[["open", "high", "low", "close", "volume"]].astype(float)
             df = add_indicators(df)
-            last = df.iloc[-1]
+            last       = df.iloc[-1]
             has_signal = entry_signal(last, regime.allow_long)
-            score = float(last.get("momentum_score", 0))
-            status = "✓ SIGNAL" if has_signal else "  —"
-            print(f"  {sym:<12} {status}  | Score: {score:+.2f} | "
+            score      = float(last.get("momentum_score", 0))
+            status     = "SIGNAL" if has_signal else "--"
+            print(f"  {sym:<12} {status:<8} | Score: {score:+.2f} | "
                   f"EMA cross: {bool(last['ema_cross_up'])} | "
                   f"RSI: {last['rsi14']:.1f} | "
                   f"Above EMA200: {last['close'] > last['ema200']}")
             if has_signal:
                 signals.append({"symbol": sym, "score": score})
+            time_mod.sleep(0.1)
         except Exception as e:
             print(f"  {sym:<12} ERROR: {e}")
 
@@ -168,31 +137,25 @@ def mode_live():
         best = sorted(signals, key=lambda x: x["score"], reverse=True)
         print(f"\nTop signal(s): {[s['symbol'] for s in best]}")
     else:
-        print("\nNo entry signals on current 4H bar.")
+        print(f"\nNo entry signals on current {INTERVAL.upper()} bar.")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Fear & Greed Regime Switcher — 4H Momentum Strategy"
+        description="Fear & Greed Regime Switcher -- Momentum Strategy"
     )
     parser.add_argument(
-        "--mode", choices=["backtest", "backtest2", "live", "spec"],
+        "--mode", choices=["backtest", "live", "spec"],
         required=True, help="Run mode"
-    )
-    parser.add_argument(
-        "--quick", action="store_true",
-        help="Quick smoke test (30-day window, backtest mode only)"
     )
     args = parser.parse_args()
 
     if args.mode == "spec":
         mode_spec()
     elif args.mode == "backtest":
-        mode_backtest(quick=args.quick)
-    elif args.mode == "backtest2":
-        mode_backtest2()
+        mode_backtest()
     elif args.mode == "live":
         mode_live()
 

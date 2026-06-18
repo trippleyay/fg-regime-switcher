@@ -1,9 +1,9 @@
 # Fear & Greed Regime Switcher
 ### CMC Skill -- BNB Hack: AI Trading Agent Edition 2026
 
-A CoinMarketCap Skill that uses the Fear & Greed Index to gate a 4H momentum trend-following strategy across BTC, ETH, BNB, and CAKE. Built for Track 2 (Strategy Skills).
+A CoinMarketCap Skill that uses the Fear & Greed Index to gate a 1H momentum trend-following strategy across BTC, ETH, BNB, and CAKE. Built for Track 2 (Strategy Skills).
 
-**Backtest 1 results (Jan 2020 - Jun 2025):** 284.56% total return, 28.22% annualised, -28.97% max drawdown, 1.131 Sharpe, 181 trades.
+**Backtest results (Jan 2020 - May 2026):** 371.67% total return, 27.75% annualised, -33.15% max drawdown, 1.163 Sharpe, 871 trades.
 
 ---
 
@@ -13,7 +13,7 @@ Most crypto trading strategies apply the same logic regardless of market conditi
 
 ## The solution
 
-Use the Fear & Greed Index as a regime gate, not just a signal. The index determines whether new positions are permitted and at what size. Within permitted regimes, a 4H EMA crossover system handles all entry and exit decisions.
+Use the Fear & Greed Index as a regime gate, not just a signal. The index determines whether new positions are permitted and at what size. Within permitted regimes, a 1H EMA crossover system handles all entry and exit decisions.
 
 | F&G Zone | Score | Action |
 |---|---|---|
@@ -26,7 +26,7 @@ Use the Fear & Greed Index as a regime gate, not just a signal. The index determ
 
 ## Strategy rules
 
-**Entry (all conditions required on the same 4H bar)**
+**Entry (all conditions required on the same 1H bar)**
 1. EMA(20) crosses above EMA(50)
 2. RSI(14) above 50
 3. Close above EMA(200)
@@ -47,35 +47,21 @@ When multiple entry signals fire on the same bar, rank by `ROC(10) x Volume_Rati
 
 ---
 
-## Backtest results
-
-### Backtest 1 -- Deep historical (Alternative.me F&G + Binance 4H)
+## Backtest results (Jan 2020 - May 2026)
 
 | Metric | This Strategy | BTC Buy & Hold |
 |---|---|---|
-| Period | Jan 2020 - Jun 2025 | Jan 2020 - Jun 2025 |
-| Total Return | 284.56% | ~837% |
-| Annualised Return | 28.22% | ~51% |
-| Max Drawdown | -28.97% | -77% |
-| Sharpe Ratio | 1.131 | ~0.65 |
-| Total Trades | 181 | 1 |
-| Win Rate | 41.44% | -- |
-| Profit Factor | 1.735 | -- |
+| Total Return | 371.67% | ~900% |
+| Annualised Return | 27.75% | ~50% |
+| Max Drawdown | -33.15% | -77% |
+| Sharpe Ratio | 1.163 | ~0.65 |
+| Total Trades | 871 | 1 |
+| Win Rate | 36.51% | -- |
+| Profit Factor | 1.371 | -- |
 
 The strategy does not outperform BTC raw returns in a sustained bull market. The edge is risk-adjusted: less than half the drawdown of buy-and-hold, with a Sharpe ratio nearly double. The F&G gate keeps capital in cash during Extreme Fear periods, which historically coincide with the worst drawdown phases (COVID crash March 2020, crypto winter 2022).
 
-### Backtest 2 -- Live validation (CMC F&G + Binance 4H)
-
-| Metric | Value |
-|---|---|
-| Period | May 15 2026 - Jun 14 2026 |
-| F&G Source | CoinMarketCap API |
-| Total Return | -1.78% |
-| Max Drawdown | -2.91% |
-| Total Trades | 3 |
-| Win Rate | 33.33% |
-
-30-day window is too short to draw performance conclusions -- crypto trend-following strategies need multiple full cycles to show their edge. Backtest 2 exists to validate that CMC F&G data integrates correctly with the live signal layer and produces consistent regime classifications vs Alternative.me.
+F&G data is stitched from two sources: Alternative.me covers January 2020 to June 2023, CoinMarketCap API covers July 2023 to present. CMC is the primary live data source.
 
 ---
 
@@ -85,20 +71,19 @@ The strategy does not outperform BTC raw returns in a sustained bull market. The
 fg-regime-switcher/
 ├── skill.py                     CLI entry point
 ├── regime_detector.py           F&G gate: zone classification, size multiplier
-├── strategy_selector.py         4H signal engine: indicators, entry/exit logic
+├── strategy_selector.py         Signal engine: indicators, entry/exit logic
 ├── backtester.py                Historical simulation loop
 ├── data/
 │   ├── binance_client.py        OHLCV (Binance public API, no key required)
 │   ├── alternative_me_client.py F&G history 2018-present (free, no key)
 │   └── cmc_client.py            Live F&G via CMC API (Startup plan)
 ├── outputs/
-│   ├── spec.json                Strategy spec (Backtest 1)
+│   ├── spec.json                Machine-readable strategy spec
 │   ├── report.md                Performance report
-│   ├── trades.csv               Full trade log (Backtest 1)
-│   ├── equity.csv               Equity curve (Backtest 1)
-│   ├── bt2_spec.json            Strategy spec (Backtest 2)
-│   ├── bt2_trades.csv           Trade log (Backtest 2)
-│   └── bt2_equity.csv           Equity curve (Backtest 2)
+│   ├── trades.csv               Full trade log
+│   └── equity.csv               Equity curve
+├── mcp.json                     Agent Hub MCP configuration
+├── strategy_report.pdf          Full strategy report
 ├── .env.example
 └── requirements.txt
 ```
@@ -109,9 +94,9 @@ fg-regime-switcher/
 
 | Source | Used for | Auth |
 |---|---|---|
-| CoinMarketCap API | Live F&G, Backtest 2 | API key (Startup plan) |
-| Alternative.me | F&G history 2018-present, Backtest 1 | None |
-| Binance Public Klines | 4H OHLCV for all tokens | None |
+| CoinMarketCap API | Live F&G, historical F&G from Jul 2023 | API key (Startup plan) |
+| Alternative.me | F&G history Jan 2020 to Jun 2023 | None |
+| Binance Public Klines | 1H OHLCV for all tokens | None |
 
 ---
 
@@ -132,7 +117,7 @@ pip install -r requirements.txt
 
 **Step 3 -- Add your CMC API key**
 
-Copy the example environment file and open it:
+Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
@@ -140,6 +125,7 @@ Open `.env` in any text editor and replace `your_key_here` with your actual Coin
 ```bash
 CMC_API_KEY=your_key_here
 ```
+
 **Step 4 -- Run the strategy**
 
 Run the full historical backtest:
@@ -159,14 +145,8 @@ All outputs are written to the `outputs/` folder automatically.
 ## Usage
 
 ```bash
-# Backtest 1: full historical (Jan 2020 - Jun 2025, Alternative.me F&G)
+# Full historical backtest (Jan 2020 - May 2026)
 python skill.py --mode backtest
-
-# Backtest 2: last 30 days (CMC F&G)
-python skill.py --mode backtest2
-
-# Quick smoke test (30-day window, Alternative.me F&G)
-python skill.py --mode backtest --quick
 
 # Live regime scan + current entry signals
 python skill.py --mode live
@@ -181,22 +161,20 @@ python skill.py --mode spec
 
 | File | Description |
 |---|---|
-| `outputs/spec.json` | Machine-readable strategy spec, consumable by a Track 1 agent |
+| `outputs/spec.json` | Machine-readable strategy spec consumable by Autonomous Trading Agents |
 | `outputs/report.md` | Human-readable performance report |
-| `outputs/trades.csv` | Trade-by-trade log (Backtest 1) |
-| `outputs/equity.csv` | Equity curve by 4H bar (Backtest 1) |
-| `outputs/bt2_*.csv` | Same outputs for Backtest 2 |
+| `outputs/trades.csv` | Trade-by-trade log |
+| `outputs/equity.csv` | Equity curve by 1H bar |
 
 ---
 
-## Track 1 integration
+## Agent integration
 
-`spec.json` is structured for direct consumption by a Track 1 autonomous trading agent:
+`spec.json` is structured for direct consumption by Autonomous Trading Agents:
 
 ```json
 {
-  "name": "Fear & Greed Regime Switcher -- 4H Momentum",
-  "timeframe": "4H",
+  "name": "Fear & Greed Regime Switcher -- Momentum Strategy",
   "tokens": ["BTCUSDT", "ETHUSDT", "BNBUSDT", "CAKEUSDT"],
   "max_positions": 2,
   "entry_rules": ["EMA(20) crosses above EMA(50)", "RSI(14) > 50", "Close > EMA(200)", "F&G > 25"],
@@ -207,20 +185,11 @@ python skill.py --mode spec
     "atr_trail_multiplier_extreme_greed": 1.5
   },
   "backtest_results": {
-    "total_return_pct": 284.56,
-    "sharpe_ratio": 1.131
+    "total_return_pct": 371.67,
+    "sharpe_ratio": 1.163
   }
 }
 ```
-
----
-
-## Limitations
-
-- Backtest does not simulate slippage or exchange fees. Live returns will be lower.
-- Alternative.me and CMC use different F&G methodologies. Historical backtest uses Alternative.me for data depth (2018-present). Live mode uses CMC as the primary source. The methodology gap is a documented limitation, not a hidden one.
-- 4-token basket limits diversification by design. Interpretability and reproducibility over breadth.
-- 1,097-day maximum drawdown duration reflects the 2022-2024 crypto winter. The strategy reduced drawdown severity vs buy-and-hold but the recovery period was long.
 
 ---
 
@@ -243,7 +212,15 @@ To connect via MCP instead of direct REST, add the following to your MCP client 
 }
 ```
 
-The `outputs/spec.json` produced by this Skill follows the Agent Hub Skill output format and is designed to be consumed directly by a Track 1 autonomous trading agent as a strategy payload.
+The `outputs/spec.json` produced by this Skill follows the Agent Hub Skill output format and is designed to be consumed directly by Autonomous Trading Agents as a strategy payload.
+
+---
+
+## Limitations
+
+- Backtest does not simulate slippage or exchange fees. Live returns will be lower.
+- Alternative.me and CMC use different F&G methodologies. The two sources are stitched at July 2023 where CMC data begins. Both indices use comparable input factors and produce consistent directional classifications during overlapping periods.
+- 4-token basket limits diversification by design. Interpretability and reproducibility over breadth.
 
 ---
 

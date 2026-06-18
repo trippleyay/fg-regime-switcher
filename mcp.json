@@ -12,13 +12,17 @@
     "version": "2.0",
     "track": "Track 2 -- Strategy Skills",
     "entry": "skill.py",
-    "modes": ["backtest", "backtest2", "live", "spec"],
+    "modes": [
+      "backtest",
+      "live",
+      "spec"
+    ],
     "cmc_endpoints_used": [
       "/v3/fear-and-greed/latest",
       "/v3/fear-and-greed/historical"
     ],
     "output": "outputs/spec.json",
     "agent_hub_compatible": true,
-    "description": "Consumes CMC Fear & Greed data via the Agent Hub MCP layer to gate a 4H momentum strategy. Outputs a machine-readable spec.json consumable by any Track 1 autonomous trading agent."
+    "description": "Consumes CMC Fear & Greed data via the Agent Hub MCP layer to gate a 1H momentum strategy. F&G history stitched from Alternative.me (2020-2023) and CMC API (2023-present). Outputs a machine-readable spec.json consumable by Autonomous Trading Agents."
   }
 }

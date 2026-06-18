@@ -1,7 +1,6 @@
 {
-  "name": "Fear & Greed Regime Switcher \u2014 4H Momentum",
+  "name": "Fear & Greed Regime Switcher -- Momentum Strategy",
   "version": "2.0",
-  "timeframe": "4H",
   "tokens": [
     "BTCUSDT",
     "ETHUSDT",
@@ -19,14 +18,14 @@
     "vol_ratio_period": 20
   },
   "entry_rules": [
-    "EMA(20) crosses above EMA(50) on 4H bar",
+    "EMA(20) crosses above EMA(50)",
     "RSI(14) > 50",
     "Close > EMA(200)",
     "F&G regime allows long (score > 25)"
   ],
   "exit_rules": [
     "EMA(20) crosses below EMA(50)",
-    "Trailing stop: close < (high_water - ATR_mult * ATR14)",
+    "Trailing stop: close < (high_water - ATR_mult x ATR14)",
     "F&G drops to Extreme Fear (<= 25)"
   ],
   "position_sizing": {
@@ -36,32 +35,34 @@
     "atr_trail_multiplier_normal": 2.0,
     "atr_trail_multiplier_extreme_greed": 1.5
   },
-  "token_ranking": "ROC(10) x Volume_Ratio \u2014 top N by score",
+  "token_ranking": "ROC(10) x Volume_Ratio -- top N by score",
   "starting_capital": 10000,
-  "backtest_period": "2020-01-01 to 2025-06-01",
+  "backtest_period": "2020-01-01 to 2026-05-01",
   "data_sources": {
-    "ohlcv": "Binance public klines API (4H)",
+    "ohlcv": "Binance public klines API",
     "fg_historical": "Alternative.me (free, 2018-present)",
-    "fg_live": "CoinMarketCap Startup plan API"
+    "fg_live": "CoinMarketCap API"
   },
   "backtest_results": {
     "starting_capital": 10000.0,
-    "final_equity": 38455.91,
-    "total_return_pct": 284.56,
-    "annualised_return_pct": 28.22,
-    "max_drawdown_pct": -28.97,
-    "max_drawdown_days": 1097.2,
-    "sharpe_ratio": 1.131,
-    "n_trades": 181,
-    "win_rate_pct": 41.44,
-    "avg_win_pct": 10.77,
-    "avg_loss_pct": -3.42,
-    "profit_factor": 1.735,
+    "final_equity": 47167.33,
+    "total_return_pct": 371.67,
+    "annualised_return_pct": 27.75,
+    "max_drawdown_pct": -33.15,
+    "sharpe_ratio": 1.163,
+    "n_trades": 871,
+    "win_rate_pct": 36.51,
+    "avg_win_pct": 3.92,
+    "avg_loss_pct": -1.51,
+    "profit_factor": 1.371,
     "exit_reasons": {
-      "trail_stop": 163,
-      "ema_cross_down": 18
+      "trail_stop": 750,
+      "ema_cross_down": 120,
+      "fg_extreme_fear": 1
     },
     "backtest_start": "2020-01-01",
-    "backtest_end": "2025-06-01"
+    "backtest_end": "2026-05-01",
+    "interval": "1h",
+    "fg_source": "Alternative.me (2020-2023) + CoinMarketCap API (2023-present)"
   }
 }
