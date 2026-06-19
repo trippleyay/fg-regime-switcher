@@ -102,20 +102,20 @@ fg-regime-switcher/
 
 ## Setup
 
-**Requirements:** Python 3.10 or above, a CoinMarketCap API key (Startup plan or above)
+**Requirements:** Python 3.10 or above, a CoinMarketCap API key
 
-**Step 1 -- Clone the repository**
+**Step 1: Clone the repository**
 ```bash
 git clone https://github.com/trippleyay/fg-regime-switcher
 cd fg-regime-switcher
 ```
 
-**Step 2 -- Install dependencies**
+**Step 2: Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-**Step 3 -- Add your CMC API key**
+**Step 3: Add your CMC API key**
 
 Copy the example environment file:
 ```bash
@@ -126,7 +126,7 @@ Open `.env` in any text editor and replace `your_key_here` with your actual Coin
 CMC_API_KEY=your_key_here
 ```
 
-**Step 4 -- Run the strategy**
+**Step 4: Run the strategy**
 
 Run the full historical backtest:
 ```bash
