@@ -63,6 +63,8 @@ The strategy does not outperform BTC raw returns in a sustained bull market. The
 
 F&G data is stitched from two sources: Alternative.me covers January 2020 to June 2023, CoinMarketCap API covers July 2023 to present. CMC is the primary live data source.
 
+*BTC buy-and-hold benchmark calculated from $7,200 (Jan 1 2020) to $76,307 (May 1 2026). Source: CoinMarketCap historical data. Sharpe ratio estimated using daily returns over the same period.*
+
 ---
 
 ## Architecture
