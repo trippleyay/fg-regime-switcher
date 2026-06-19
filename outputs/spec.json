@@ -40,7 +40,7 @@
   "backtest_period": "2020-01-01 to 2026-05-01",
   "data_sources": {
     "ohlcv": "Binance public klines API",
-    "fg_historical": "Alternative.me (free, 2018-present)",
+    "fg_historical": "Alternative.me (2020-2023) + CoinMarketCap API (2023-present)",
     "fg_live": "CoinMarketCap API"
   },
   "backtest_results": {

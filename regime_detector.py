@@ -2,7 +2,7 @@
 regime_detector.py
 ------------------
 Classifies market regime from Fear & Greed index.
-Acts as position-sizing gate and long-entry filter for the 4H momentum strategy.
+Acts as position-sizing gate and long-entry filter for the 1H momentum strategy.
 
 Zones:
   0-25   Extreme Fear  -> no new longs

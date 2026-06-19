@@ -92,37 +92,6 @@ def get_current_fear_greed() -> dict:
     }
 
 
-def get_seven_day_trend(df: pd.DataFrame = None) -> str:
-    """
-    Determine the 7-day F&G trend direction.
-
-    Args:
-        df: Optional pre-fetched DataFrame. If None, fetches fresh data.
-
-    Returns:
-        'rising', 'falling', or 'flat'
-    """
-    if df is None:
-        df = fetch_fear_greed_history()
-
-    recent = df.tail(7)
-
-    if len(recent) < 2:
-        return "flat"
-
-    first_half_avg = recent.head(3)["value"].mean()
-    second_half_avg = recent.tail(3)["value"].mean()
-
-    diff = second_half_avg - first_half_avg
-
-    if diff > 3:
-        return "rising"
-    elif diff < -3:
-        return "falling"
-    else:
-        return "flat"
-
-
 if __name__ == "__main__":
     print("Testing Alternative.me client...\n")
 
@@ -136,10 +105,6 @@ if __name__ == "__main__":
     # Current value
     current = get_current_fear_greed()
     print(f"\nCurrent F&G: {current['value']} ({current['classification']}) on {current['date']}")
-
-    # 7-day trend
-    trend = get_seven_day_trend(df)
-    print(f"7-day trend: {trend}")
 
     # Regime distribution
     print(f"\nRegime distribution (2020-2025):")

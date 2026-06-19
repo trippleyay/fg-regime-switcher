@@ -72,11 +72,10 @@ fg-regime-switcher/
 ├── skill.py                     CLI entry point
 ├── regime_detector.py           F&G gate: zone classification, size multiplier
 ├── strategy_selector.py         Signal engine: indicators, entry/exit logic
-├── backtester.py                Historical simulation loop
+├── backtester.py                Historical simulation loop (calls Binance API directly)
 ├── data/
-│   ├── binance_client.py        OHLCV (Binance public API, no key required)
 │   ├── alternative_me_client.py F&G history 2018-present (free, no key)
-│   └── cmc_client.py            Live F&G via CMC API (Startup plan)
+│   └── cmc_client.py            Live F&G via CMC API
 ├── outputs/
 │   ├── spec.json                Machine-readable strategy spec
 │   ├── report.md                Performance report
@@ -221,6 +220,7 @@ The `outputs/spec.json` produced by this Skill follows the Agent Hub Skill outpu
 - Backtest does not simulate slippage or exchange fees. Live returns will be lower.
 - Alternative.me and CMC use different F&G methodologies. The two sources are stitched at July 2023 where CMC data begins. Both indices use comparable input factors and produce consistent directional classifications during overlapping periods.
 - 4-token basket limits diversification by design. Interpretability and reproducibility over breadth.
+- CAKEUSDT data begins February 2021 (Binance listing date). BTC, ETH, and BNB cover the full January 2020 to May 2026 window. Despite the shorter history, CAKE contributed approximately 23% of total strategy PnL, confirming it is a meaningful participant in the results rather than a cosmetic addition to the basket.
 
 ---
 
