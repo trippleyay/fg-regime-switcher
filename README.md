@@ -217,6 +217,7 @@ To connect via MCP instead of direct REST, add the following to your MCP client 
 ```
 
 The `outputs/spec.json` produced by this Skill follows the Agent Hub Skill output format and is designed to be consumed directly by Autonomous Trading Agents as a strategy payload.
+
 A `SKILL.md` file is included in the `skills/fg-regime-switcher/` directory, structured for indexing in the CMC Skills Marketplace. Agents can read it to understand when to invoke the skill, what triggers it, and what output to expect.
 
 ---
